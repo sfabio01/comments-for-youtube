@@ -1,0 +1,47 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+
+</head>
+
+<body>
+    <h1>Welcome to 'Comments for Youtube'</h1>
+    Before you start, enter your name or a username:
+    <form id="form">
+        <input type="text" id="text" placeholder="Your name here">
+        <button type="submit" id="submit" onclick="submit()">SUBMIT</button>
+    </form>
+    <p id="message"></p>
+    <script>
+        var uid = "";
+        chrome.identity.getProfileUserInfo(function (infos) {
+            uid = infos.id;
+            if (uid == "") {
+                // user not signed in
+                document.getElementById("form").disabled = true;
+                document.getElementById("message").innerText = "Please, make sure you are signed in with Google in your browser and reload the page"
+            } else {
+
+            }
+        });
+        function submit() {
+            let input = document.getElementById("text").value;
+            input = input.trim();
+            if (input != null && input != "") {
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {
+
+                }
+                xhr.open('POST', 'http://127.0.0.1:5001/users/' + uid);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(JSON.stringify({ username: input }));
+            }
+        }
+    </script>
+</body>
+
+</html>

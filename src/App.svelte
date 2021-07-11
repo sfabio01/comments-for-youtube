@@ -1,30 +1,25 @@
 <script>
-	export let name;
+	import InputField from "./components/input_field.svelte";
+	import MessageField from "./components/message_field.svelte";
+	import CommentsSection from "./components/comments_section.svelte";
+	import LoadMoreButton from "./components/load_more_button.svelte";
+
+	let uid = "";
+	let msg = "";
+	chrome.identity.getProfileUserInfo(function (infos) {
+		uid = infos.id;
+		if (uid == "") {
+			// user not signed in
+			msg = "You are not signed in";
+		} else {
+		}
+	});
 </script>
 
-<main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
+<InputField />
+<MessageField {msg} />
+<CommentsSection />
+<LoadMoreButton />
 
 <style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
-
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
 </style>
