@@ -1,0 +1,15 @@
+{
+    "name": "Comments for Youtube",
+    "version": "1.0",
+    "description": "A Chrome Extension that let you comment everywhere on Youtube, even if the video has comments disabled!",
+    "permissions": [
+        "activeTab"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "host_permissions": [
+        "http://127.0.0.1:5001/"
+    ],
+    "manifest_version": 3
+}
