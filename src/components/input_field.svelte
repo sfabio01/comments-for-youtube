@@ -1,9 +1,12 @@
 <script>
     import { BarLoader } from "svelte-loading-spinners";
     let input = "";
+    export let uid = "";
+    export let username = "";
+
     function addcomment() {
         let comment = input.trim();
-        if (input != "") {
+        if (comment != "") {
             let xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (this.readyState == XMLHttpRequest.DONE) {
@@ -14,12 +17,20 @@
                     }
                 }
             };
-            xhr.open("POST", "http://127.0.0.1:5000/2ffmZjaatIc");
+            xhr.open("POST", "http://127.0.0.1:5001/2ffmZjaatIc");
             xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.send();
+            xhr.send(
+                JSON.stringify({
+                    text: comment,
+                    authorName: username,
+                    authorId: uid,
+                })
+            );
         }
     }
 </script>
 
-<input type="text" bind:value={input} placeholder="Add a comment..." />
-<button on:click={addcomment}>SUBMIT</button>
+<form on:submit={addcomment}>
+    <input type="text" bind:value={input} placeholder="Add a comment..." />
+    <button type="submit">SUBMIT</button>
+</form>
