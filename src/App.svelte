@@ -47,7 +47,7 @@
 
 <InputField {uid} {username} />
 <MessageField {msg} />
-<CommentsSection {uid} />
+<CommentsSection {uid} {username} />
 
 <style>
 </style>

@@ -1,12 +1,15 @@
 <script>
     import LoadMoreButton from "./load_more_button.svelte";
+    import ReplyButton from "./reply_button.svelte";
+    import LoadReplies from "./load_replies.svelte";
 
     export let uid = "";
+    export let username = "";
     let offset = 0;
 
     let comments = {};
 
-    $: loadMore(uid);
+    $: downloadComments(uid);
 
     function like(commentId) {
         let xhr = new XMLHttpRequest();
@@ -47,7 +50,7 @@
         xhr.send(JSON.stringify({ uid: uid }));
     }
 
-    function loadMore(uid) {
+    function downloadComments(uid) {
         if (uid == "") return;
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
@@ -71,8 +74,11 @@
     }
     function reload() {
         offset = 0;
-        loadMore();
+
+        downloadComments(uid);
     }
+
+    function addReply() {}
 </script>
 
 <button on:click={reload}>RELOAD</button>
@@ -90,7 +96,10 @@
         <button id="like-{id}" on:click={like(id)}>LIKE</button>
     {/if}
     <br />
+    <ReplyButton {uid} {username} commentId={id} on:replySuccess={addReply()} />
+    <LoadReplies {uid} commentId={id} />
+    <br />
     <br />
 {/each}
 
-<LoadMoreButton on:loadMore={loadMore(uid)} />
+<LoadMoreButton on:loadMore={downloadComments(uid)} />
