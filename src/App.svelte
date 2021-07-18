@@ -6,7 +6,7 @@
 	let uid = "";
 	let msg = "";
 	let username = "";
-	let offset = 0;
+
 	chrome.identity.getProfileUserInfo(function (infos) {
 		uid = infos.id;
 		if (uid == "") {

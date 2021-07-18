@@ -12,6 +12,7 @@
                 if (this.readyState == XMLHttpRequest.DONE) {
                     if (this.status == 201) {
                         // success
+                        input = "";
                     } else {
                         // error
                     }
@@ -30,7 +31,5 @@
     }
 </script>
 
-<form on:submit={addcomment}>
-    <input type="text" bind:value={input} placeholder="Add a comment..." />
-    <button type="submit">SUBMIT</button>
-</form>
+<input type="text" bind:value={input} placeholder="Add a comment..." />
+<button on:click={addcomment}>SUBMIT</button>

@@ -6,20 +6,7 @@
 
     let comments = {};
 
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://127.0.0.1:5001/2ffmZjaatIc/" + offset.toString());
-    xhr.onreadystatechange = function () {
-        if (this.readyState == XMLHttpRequest.DONE) {
-            if (this.status == 200) {
-                let obj = JSON.parse(xhr.responseText);
-                comments = obj.comments;
-                offset = Object.keys(comments).length;
-            } else {
-                // failed
-            }
-        }
-    };
-    xhr.send();
+    $: loadMore(uid);
 
     function like(commentId) {
         let xhr = new XMLHttpRequest();
@@ -27,8 +14,7 @@
         xhr.onreadystatechange = function () {
             if (this.readyState == XMLHttpRequest.DONE) {
                 if (this.status == 200) {
-                    document.getElementById(commentId).style.backgroundColor =
-                        "green";
+                    comments[commentId].liked = true;
                     comments[commentId].likes++;
                     comments = comments;
                 } else {
@@ -40,7 +26,29 @@
         xhr.send(JSON.stringify({ uid: uid }));
     }
 
-    function loadMore() {
+    function removelike(commentId) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(
+            "DELETE",
+            "http://127.0.0.1:5001/2ffmZjaatIc/like/" + commentId
+        );
+        xhr.onreadystatechange = function () {
+            if (this.readyState == XMLHttpRequest.DONE) {
+                if (this.status == 200) {
+                    comments[commentId].liked = false;
+                    comments[commentId].likes--;
+                    comments = comments;
+                } else {
+                    // failed
+                }
+            }
+        };
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({ uid: uid }));
+    }
+
+    function loadMore(uid) {
+        if (uid == "") return;
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
             if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
@@ -51,30 +59,19 @@
         };
 
         xhr.open(
-            "GET",
+            "POST",
             "http://127.0.0.1:5001/2ffmZjaatIc/" + offset.toString()
         );
-        xhr.send();
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(
+            JSON.stringify({
+                uid: uid,
+            })
+        );
     }
     function reload() {
         offset = 0;
-        let xhr = new XMLHttpRequest();
-        xhr.open(
-            "GET",
-            "http://127.0.0.1:5001/2ffmZjaatIc/" + offset.toString()
-        );
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    let obj = JSON.parse(xhr.responseText);
-                    comments = obj.comments;
-                    offset = Object.keys(comments).length;
-                } else {
-                    // failed
-                }
-            }
-        };
-        xhr.send();
+        loadMore();
     }
 </script>
 
@@ -84,8 +81,16 @@
     <hr />
     <b>{comment.authorName}</b> <br />
     {comment.text} <br />
-    Likes: {comment.likes} <button {id} on:click={like(id)}>LIKE</button> <br />
+    Likes: {comment.likes}
+    {#if comment.liked}
+        <button id="like-{id}" on:click={removelike(id)} style="color: blue;"
+            >LIKE</button
+        >
+    {:else}
+        <button id="like-{id}" on:click={like(id)}>LIKE</button>
+    {/if}
+    <br />
     <br />
 {/each}
 
-<LoadMoreButton on:loadMore={loadMore} />
+<LoadMoreButton on:loadMore={loadMore(uid)} />
