@@ -1,8 +1,12 @@
 <script>
     import { BarLoader } from "svelte-loading-spinners";
+    import { createEventDispatcher } from "svelte";
+
     let input = "";
     export let uid = "";
     export let username = "";
+
+    const dispatch = createEventDispatcher();
 
     function addcomment() {
         let comment = input.trim();
@@ -13,6 +17,7 @@
                     if (this.status == 201) {
                         // success
                         input = "";
+                        dispatch("commentSuccess", xhr.response);
                     } else {
                         // error
                     }
