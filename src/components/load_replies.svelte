@@ -1,4 +1,4 @@
 <script>
-    export let uid = "";
-    export let commentId = "";
 </script>
+
+<button>LOAD REPLIES</button>

@@ -2,52 +2,52 @@
     import LoadMoreButton from "./load_more_button.svelte";
     import ReplyButton from "./reply_button.svelte";
     import LoadReplies from "./load_replies.svelte";
+    import * as stores from "./../stores";
+    import { comments, uid } from "./../stores";
 
-    export let uid = "";
-    export let username = "";
-    let offset = 0;
+    let userId;
+    $: userId = $uid;
 
-    let comments = {};
-
-    $: downloadComments(uid);
+    $: downloadComments(userId);
 
     function like(commentId) {
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://127.0.0.1:5001/2ffmZjaatIc/like/" + commentId);
+        xhr.open("POST", stores.baseURL + "/2ffmZjaatIc/like/" + commentId);
         xhr.onreadystatechange = function () {
             if (this.readyState == XMLHttpRequest.DONE) {
                 if (this.status == 200) {
-                    comments[commentId].liked = true;
-                    comments[commentId].likes++;
-                    comments = comments;
+                    comments.update(function (val) {
+                        val[commentId].liked = true;
+                        val[commentId].likes++;
+                        return val;
+                    });
                 } else {
                     // failed
                 }
             }
         };
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify({ uid: uid }));
+        xhr.send(JSON.stringify({ uid: userId }));
     }
 
     function removelike(commentId) {
         let xhr = new XMLHttpRequest();
-        xhr.open(
-            "DELETE",
-            "http://127.0.0.1:5001/2ffmZjaatIc/like/" + commentId
-        );
+        xhr.open("DELETE", stores.baseURL + "/2ffmZjaatIc/like/" + commentId);
         xhr.onreadystatechange = function () {
             if (this.readyState == XMLHttpRequest.DONE) {
                 if (this.status == 200) {
-                    comments[commentId].liked = false;
-                    comments[commentId].likes--;
-                    comments = comments;
+                    comments.update(function (val) {
+                        val[commentId].liked = false;
+                        val[commentId].likes--;
+                        return val;
+                    });
                 } else {
                     // failed
                 }
             }
         };
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify({ uid: uid }));
+        xhr.send(JSON.stringify({ uid: userId }));
     }
 
     function downloadComments(uid) {
@@ -56,34 +56,36 @@
         xhr.onreadystatechange = function () {
             if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
                 let obj = JSON.parse(xhr.responseText);
-                comments = { ...comments, ...obj.comments };
-                offset = Object.keys(comments).length;
+                comments.update(function (val) {
+                    let res = { ...val, ...obj.comments };
+                    stores.setOffset(Object.keys(res).length);
+                    return res;
+                });
+                //offset = Object.keys(comments).length;
             }
         };
 
         xhr.open(
             "POST",
-            "http://127.0.0.1:5001/2ffmZjaatIc/" + offset.toString()
+            stores.baseURL + "/2ffmZjaatIc/" + stores.offset.toString()
         );
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(
             JSON.stringify({
-                uid: uid,
+                uid: userId,
             })
         );
     }
     function reload() {
-        offset = 0;
-
-        downloadComments(uid);
+        // fixare
+        stores.setOffset(0);
+        downloadComments(userId);
     }
-
-    function addReply() {}
 </script>
 
 <button on:click={reload}>RELOAD</button>
 
-{#each Object.entries(comments) as [id, comment]}
+{#each Object.entries($comments) as [id, comment]}
     <hr />
     <b>{comment.authorName}</b> <br />
     {comment.text} <br />
@@ -96,10 +98,11 @@
         <button id="like-{id}" on:click={like(id)}>LIKE</button>
     {/if}
     <br />
-    <ReplyButton {uid} {username} commentId={id} on:replySuccess={addReply()} />
-    <LoadReplies {uid} commentId={id} />
+    <ReplyButton commentId={id} />
+    <br />
+    <LoadReplies commentId={id} />
     <br />
     <br />
 {/each}
 
-<LoadMoreButton on:loadMore={downloadComments(uid)} />
+<LoadMoreButton on:loadMore={downloadComments(userId)} />

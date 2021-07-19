@@ -1,26 +1,27 @@
 <script>
+	import { BarLoader } from "svelte-loading-spinners";
 	import InputField from "./components/input_field.svelte";
 	import MessageField from "./components/message_field.svelte";
 	import CommentsSection from "./components/comments_section.svelte";
-
-	let uid = "";
-	let msg = "";
-	let username = "";
+	import * as stores from "./stores";
+	import { uid } from "./stores";
 
 	chrome.identity.getProfileUserInfo(function (infos) {
-		uid = infos.id;
-		if (uid == "") {
+		uid.set(infos.id);
+		if (infos.id == "") {
 			// user not signed in
-			msg = "You are not signed in :/";
+			stores.message.set("You are not signed in :/");
 		} else {
 			// fetch username
 			let xhr = new XMLHttpRequest();
-			xhr.open("GET", "http://127.0.0.1:5001/users/" + uid);
+			xhr.open("GET", stores.baseURL + "/users/" + infos.id);
 			xhr.onreadystatechange = function () {
 				if (this.readyState == XMLHttpRequest.DONE) {
 					if (this.status == 200) {
-						username = JSON.parse(xhr.responseText).username;
-						msg = "user: " + username;
+						stores.setUsername(
+							JSON.parse(xhr.responseText).username
+						);
+						stores.message.set("User: " + stores.username);
 					}
 					if (this.status == 404) {
 						// ask for username
@@ -28,15 +29,15 @@
 						do {
 							input = prompt("Choose a username").trim();
 						} while (input == "" || input == null);
-						username = input;
+						stores.setUsername(input);
 						let xhr = new XMLHttpRequest();
-						xhr.open("POST", "http://127.0.0.1:5001/users/" + uid);
+						xhr.open("POST", stores.baseURL + "/users/" + infos.id);
 						xhr.setRequestHeader(
 							"Content-Type",
 							"application/json"
 						);
 						xhr.send(JSON.stringify({ username: username }));
-						msg = "user: " + username;
+						stores.message.set("User: " + stores.username);
 					}
 				}
 			};
@@ -45,9 +46,9 @@
 	});
 </script>
 
-<InputField {uid} {username} />
-<MessageField {msg} />
-<CommentsSection {uid} {username} />
+<InputField />
+<MessageField />
+<CommentsSection />
 
 <style>
 </style>

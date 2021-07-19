@@ -1,12 +1,7 @@
 <script>
-    import { BarLoader } from "svelte-loading-spinners";
-    import { createEventDispatcher } from "svelte";
-
+    import * as stores from "./../stores";
+    import { uid } from "./../stores";
     let input = "";
-    export let uid = "";
-    export let username = "";
-
-    const dispatch = createEventDispatcher();
 
     function addcomment() {
         let comment = input.trim();
@@ -17,19 +12,18 @@
                     if (this.status == 201) {
                         // success
                         input = "";
-                        dispatch("commentSuccess", xhr.response);
                     } else {
                         // error
                     }
                 }
             };
-            xhr.open("POST", "http://127.0.0.1:5001/2ffmZjaatIc");
+            xhr.open("POST", stores.baseURL + "/2ffmZjaatIc");
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(
                 JSON.stringify({
                     text: comment,
-                    authorName: username,
-                    authorId: uid,
+                    authorName: stores.username,
+                    authorId: $uid,
                 })
             );
         }

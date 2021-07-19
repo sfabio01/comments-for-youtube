@@ -1,7 +1,7 @@
 <script>
-    export let msg = "";
+    import { message } from "./../stores";
 </script>
 
-{#if msg != ""}
-    <p>{msg}</p>
+{#if $message != ""}
+    <p>{$message}</p>
 {/if}

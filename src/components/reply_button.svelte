@@ -1,11 +1,7 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-
-    export let uid = "";
+    import * as stores from "./../stores";
+    import { uid, comments } from "./../stores";
     export let commentId = "";
-    export let username = "";
-
-    const dispatch = createEventDispatcher();
 
     let viewinput = false;
     let input = "";
@@ -13,32 +9,36 @@
     function changeInputVisibility() {
         viewinput = !viewinput;
     }
+
     function reply() {
         let replyText = input.trim();
         if (replyText != "") {
             let xhr = new XMLHttpRequest();
             xhr.open(
                 "POST",
-                "http://127.0.0.1:5001/2ffmZjaatIc/reply/" + commentId
+                stores.baseURL + "/2ffmZjaatIc/reply/" + commentId
             );
             xhr.onreadystatechange = function () {
                 if (this.readyState == XMLHttpRequest.DONE) {
                     if (this.status == 201) {
                         // success
-                        let obj = xhr.response;
                         input = "";
                         changeInputVisibility();
-                        dispatch("replySuccess", obj);
+                        let obj = xhr.response;
+                        comments.update(function (comments) {
+                            comments[commentId].replies[obj.replyId] =
+                                obj.reply;
+                            return comments;
+                        });
                     } else {
-                        // error
                     }
                 }
             };
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(
                 JSON.stringify({
-                    authorId: uid,
-                    authorName: username,
+                    authorId: $uid,
+                    authorName: stores.username,
                     text: replyText,
                 })
             );
