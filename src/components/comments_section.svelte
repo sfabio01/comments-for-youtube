@@ -1,7 +1,7 @@
 <script>
     import LoadMoreButton from "./load_more_button.svelte";
     import ReplyButton from "./reply_button.svelte";
-    import LoadReplies from "./load_replies.svelte";
+    import ViewReplies from "./view_replies.svelte";
     import * as stores from "./../stores";
     import { comments, uid } from "./../stores";
 
@@ -61,7 +61,6 @@
                     stores.setOffset(Object.keys(res).length);
                     return res;
                 });
-                //offset = Object.keys(comments).length;
             }
         };
 
@@ -91,18 +90,20 @@
     {comment.text} <br />
     Likes: {comment.likes}
     {#if comment.liked}
-        <button id="like-{id}" on:click={removelike(id)} style="color: blue;"
-            >LIKE</button
+        <button
+            id="like-{id}"
+            on:click={() => removelike(id)}
+            style="color: blue;">LIKE</button
         >
     {:else}
-        <button id="like-{id}" on:click={like(id)}>LIKE</button>
+        <button id="like-{id}" on:click={() => like(id)}>LIKE</button>
     {/if}
     <br />
     <ReplyButton commentId={id} />
     <br />
-    <LoadReplies commentId={id} />
+    <ViewReplies commentId={id} />
     <br />
     <br />
 {/each}
 
-<LoadMoreButton on:loadMore={downloadComments(userId)} />
+<LoadMoreButton on:loadMore={() => downloadComments(userId)} />

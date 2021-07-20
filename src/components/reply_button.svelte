@@ -24,7 +24,7 @@
                         // success
                         input = "";
                         changeInputVisibility();
-                        let obj = xhr.response;
+                        let obj = JSON.parse(xhr.responseText);
                         comments.update(function (comments) {
                             comments[commentId].replies[obj.replyId] =
                                 obj.reply;
