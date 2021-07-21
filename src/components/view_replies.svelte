@@ -1,5 +1,5 @@
 <script>
-    import { baseURL, uid, comments } from "./../stores";
+    import { baseURL, uid, comments, message } from "./../stores";
 
     export let commentId = "";
     let visible = false;
@@ -12,18 +12,25 @@
 
     function fetchReplies() {
         if (commentId == "") return;
+
+        if ("replies" in myComments[commentId]) {
+            changeVisibility();
+            return;
+        }
         let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
-                let obj = JSON.parse(xhr.responseText);
-                console.log(obj);
-                comments.update(function (comments) {
-                    comments[commentId].replies = obj.replies;
-
-                    console.log(comments);
-                    return comments;
-                });
-                changeVisibility();
+            if (this.readyState == XMLHttpRequest.DONE) {
+                if (this.status == 200) {
+                    let obj = JSON.parse(xhr.responseText);
+                    comments.update(function (comments) {
+                        comments[commentId].replies = obj.replies;
+                        return comments;
+                    });
+                    changeVisibility();
+                } else {
+                    message.set("An error accured");
+                    console.log(xhr.responseText);
+                }
             }
         };
 
