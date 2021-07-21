@@ -1,10 +1,12 @@
 <script>
     import { baseURL, uid, comments, message } from "./../stores";
+    import { DateDiff } from "./../utils";
 
     export let commentId = "";
     let visible = false;
     let myComments;
     $: myComments = $comments;
+    let now = new Date();
 
     function changeVisibility() {
         visible = !visible;
@@ -12,7 +14,7 @@
 
     function fetchReplies() {
         if (commentId == "") return;
-
+        now = new Date();
         if ("replies" in myComments[commentId]) {
             changeVisibility();
             return;
@@ -47,8 +49,10 @@
 {#if visible}
     <button on:click={changeVisibility}>HIDE REPLIES</button>
     {#each Object.entries(myComments[commentId].replies) as [id, reply]}
-        <div style="margin-left: 20px">
-            <b>{reply.authorName}</b> <br />
+        <div style="margin-left: 15px">
+            <b>{reply.authorName}</b>
+            <i>{DateDiff.getString(new Date(reply.lastUpdateAt), now)}</i>
+            <br />
             {reply.text} <br />
         </div>
     {/each}
