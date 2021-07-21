@@ -1,6 +1,6 @@
 <script>
     import * as stores from "./../stores";
-    import { uid } from "./../stores";
+    import { uid, comments, message } from "./../stores";
     let input = "";
 
     function addcomment() {
@@ -11,9 +11,19 @@
                 if (this.readyState == XMLHttpRequest.DONE) {
                     if (this.status == 201) {
                         // success
+                        let obj = JSON.parse(xhr.responseText);
                         input = "";
+                        comments.update(function (comments) {
+                            comments = {
+                                [obj.commentId]: obj.comment,
+                                ...comments,
+                            };
+                            console.log(comments);
+                            return comments;
+                        });
                     } else {
                         // error
+                        message.set("An error occured");
                     }
                 }
             };

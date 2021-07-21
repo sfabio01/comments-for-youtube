@@ -76,8 +76,8 @@
         );
     }
     function reload() {
-        // fixare
         stores.setOffset(0);
+        comments.set({});
         downloadComments(userId);
     }
 </script>
