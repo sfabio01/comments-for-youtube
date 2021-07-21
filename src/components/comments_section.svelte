@@ -4,11 +4,14 @@
     import ViewReplies from "./view_replies.svelte";
     import * as stores from "./../stores";
     import { comments, uid } from "./../stores";
+    import { DateDiff } from "./../utils";
 
     let userId;
     $: userId = $uid;
 
     $: downloadComments(userId);
+
+    let now = new Date();
 
     function like(commentId) {
         let xhr = new XMLHttpRequest();
@@ -76,6 +79,7 @@
         );
     }
     function reload() {
+        now = new Date();
         stores.setOffset(0);
         comments.set({});
         downloadComments(userId);
@@ -86,7 +90,8 @@
 
 {#each Object.entries($comments) as [id, comment]}
     <hr />
-    <b>{comment.authorName}</b> <br />
+    <b>{comment.authorName}</b>
+    <i>{DateDiff.getString(new Date(comment.lastUpdateAt), now)}</i> <br />
     {comment.text} <br />
     Likes: {comment.likes}
     {#if comment.liked}
