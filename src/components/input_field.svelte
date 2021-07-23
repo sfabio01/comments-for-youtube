@@ -1,6 +1,6 @@
 <script>
     import * as stores from "./../stores";
-    import { uid, comments, message } from "./../stores";
+    import { uid, comments, message, videoId } from "./../stores";
     let input = "";
 
     function addcomment() {
@@ -27,7 +27,7 @@
                     }
                 }
             };
-            xhr.open("POST", stores.baseURL + "/2ffmZjaatIc");
+            xhr.open("POST", stores.baseURL + "/" + $videoId);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(
                 JSON.stringify({

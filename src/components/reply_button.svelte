@@ -1,6 +1,6 @@
 <script>
     import * as stores from "./../stores";
-    import { uid, comments } from "./../stores";
+    import { uid, comments, videoId } from "./../stores";
     export let commentId = "";
 
     let viewinput = false;
@@ -16,7 +16,7 @@
             let xhr = new XMLHttpRequest();
             xhr.open(
                 "POST",
-                stores.baseURL + "/2ffmZjaatIc/reply/" + commentId
+                stores.baseURL + "/" + $videoId + "/reply/" + commentId
             );
             xhr.onreadystatechange = function () {
                 if (this.readyState == XMLHttpRequest.DONE) {

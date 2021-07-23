@@ -1,5 +1,5 @@
 <script>
-    import { baseURL, uid, comments, message } from "./../stores";
+    import { baseURL, uid, comments, message, videoId } from "./../stores";
     import { DateDiff } from "./../utils";
 
     export let commentId = "";
@@ -36,7 +36,7 @@
             }
         };
 
-        xhr.open("POST", baseURL + "/2ffmZjaatIc/replies/" + commentId);
+        xhr.open("POST", baseURL + "/" + $videoId + "/replies/" + commentId);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(
             JSON.stringify({

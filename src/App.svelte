@@ -4,7 +4,39 @@
 	import MessageField from "./components/message_field.svelte";
 	import CommentsSection from "./components/comments_section.svelte";
 	import * as stores from "./stores";
-	import { uid } from "./stores";
+	import { uid, videoId, status } from "./stores";
+
+	chrome.tabs.query(
+		{
+			active: true,
+			currentWindow: true,
+		},
+		function ([tab]) {
+			let url = tab.url;
+			videoId.set(url.split("?")[1].substring(2));
+			let xhr = new XMLHttpRequest();
+			xhr.open(
+				"GET",
+				"https://youtube.googleapis.com/youtube/v3/commentThreads?part=id&videoId=" +
+					$videoId +
+					"&key=AIzaSyAzRbVzVFIftvpw5To_YP67scHt2c5ccYQ"
+			);
+			xhr.onreadystatechange = function () {
+				if (this.readyState == XMLHttpRequest.DONE) {
+					if (this.status == 403) {
+						let res = JSON.parse(this.responseText);
+						if (res.error.errors[0].reason == "commentsDisabled") {
+							status.set(stores.Status.Enabled);
+
+							return;
+						}
+					}
+				}
+				status.set(stores.Status.Disabled);
+			};
+			xhr.send();
+		}
+	);
 
 	chrome.identity.getProfileUserInfo(function (infos) {
 		uid.set(infos.id);
@@ -46,9 +78,13 @@
 	});
 </script>
 
-<InputField />
-<MessageField />
-<CommentsSection />
+{#if $status == stores.Status.Enabled}
+	<InputField />
+	<MessageField />
+	<CommentsSection />
+{:else if $status == stores.Status.Disabled}
+	Comments are already Enabled
+{/if}
 
 <style>
 </style>

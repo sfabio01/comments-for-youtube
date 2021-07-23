@@ -6,7 +6,6 @@
         "activeTab",
         "identity",
         "identity.email",
-        "storage",
         "tabs"
     ],
     "action": {
