@@ -13,7 +13,7 @@
 		},
 		function ([tab]) {
 			let url = tab.url;
-			videoId.set(url.split("?")[1].substring(2));
+			videoId.set(getUrlParams(url)["v"]);
 			let xhr = new XMLHttpRequest();
 			xhr.open(
 				"GET",
@@ -76,6 +76,16 @@
 			xhr.send();
 		}
 	});
+	function getUrlParams(url) {
+		var vars = {};
+		var parts = url.replace(
+			/[?&]+([^=&]+)=([^&]*)/gi,
+			function (m, key, value) {
+				vars[key] = value;
+			}
+		);
+		return vars;
+	}
 </script>
 
 {#if $status == stores.Status.Enabled}
