@@ -3,7 +3,7 @@
     import ReplyButton from "./reply_button.svelte";
     import ViewReplies from "./view_replies.svelte";
     import * as stores from "./../stores";
-    import { comments, uid, videoId, username } from "./../stores";
+    import { comments, uid, videoId } from "./../stores";
     import { DateDiff } from "./../utils";
 
     let userId;
@@ -235,6 +235,10 @@
         <ViewReplies commentId={id} />
     </div>
 {/each}
+
+{#if Object.entries($comments).length == 0}
+    <p class="text-center">There are no comments for this video yet</p>
+{/if}
 
 <LoadMoreButton on:loadMore={() => downloadComments(userId, myVideoId)} />
 <br />

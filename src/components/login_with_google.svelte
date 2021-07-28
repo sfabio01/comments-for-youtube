@@ -35,6 +35,7 @@
     }
 </script>
 
-<button type="button" class="btn btn-primary" on:click={login}
-    >CONTINUE WITH GOOGLE</button
+<div class="container " />
+<button type="button" class="btn btn-primary m-auto " on:click={login}
+    ><b>CONTINUE WITH GOOGLE</b></button
 >
