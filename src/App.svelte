@@ -5,6 +5,7 @@
 	import * as stores from "./stores";
 	import { uid, videoId, status, username } from "./stores";
 	import ChooseUsername from "./components/choose_username.svelte";
+	import LoginWithGoogle from "./components/login_with_google.svelte";
 
 	chrome.tabs.query(
 		{
@@ -26,49 +27,49 @@
 					if (this.status == 403) {
 						let res = JSON.parse(this.responseText);
 						if (res.error.errors[0].reason == "commentsDisabled") {
-							chrome.identity.getProfileUserInfo(function (
-								infos
-							) {
-								uid.set(infos.id);
-								if (infos.id == "") {
-									// user not signed in
-									stores.message.set(
-										"You are not signed into this browser"
-									);
-									status.set(stores.Status.Failed);
-								} else {
-									// fetch username
-									let xhr = new XMLHttpRequest();
-									xhr.open(
-										"GET",
-										stores.baseURL + "/users/" + infos.id
-									);
-									xhr.onreadystatechange = function () {
-										if (
-											this.readyState ==
-											XMLHttpRequest.DONE
-										) {
-											if (this.status == 200) {
-												username.set(
-													JSON.parse(xhr.responseText)
-														.username
-												);
-												status.set(
-													stores.Status.Success
-												);
+							//Check user logged in
+							chrome.runtime.sendMessage(
+								{ command: "checkAuth" },
+								(response) => {
+									console.log(response);
+									if (response.status == "success") {
+										uid.set(response.message.uid);
+										// fetch username
+										let xhr = new XMLHttpRequest();
+										xhr.open(
+											"GET",
+											stores.baseURL + "/users/" + $uid
+										);
+										xhr.onreadystatechange = function () {
+											if (
+												this.readyState ==
+												XMLHttpRequest.DONE
+											) {
+												if (this.status == 200) {
+													username.set(
+														JSON.parse(
+															xhr.responseText
+														).username
+													);
+													status.set(
+														stores.Status.Success
+													);
+												}
+												if (this.status == 404) {
+													// ask for username
+													status.set(
+														stores.Status
+															.MissingUsername
+													);
+												}
 											}
-											if (this.status == 404) {
-												// ask for username
-												status.set(
-													stores.Status
-														.MissingUsername
-												);
-											}
-										}
-									};
-									xhr.send();
+										};
+										xhr.send();
+									} else {
+										status.set(stores.Status.NotLoggedIn);
+									}
 								}
-							});
+							);
 						} else {
 							status.set(stores.Status.CommentsEnabled);
 						}
@@ -102,6 +103,8 @@
 	<ChooseUsername />
 {:else if $status == stores.Status.Failed}
 	<MessageField />
+{:else if $status == stores.Status.NotLoggedIn}
+	<LoginWithGoogle />
 {:else if $status == stores.Status.Loading}
 	<div class="spinner-border text-primary " role="status">
 		<span class="visually-hidden">Loading...</span>

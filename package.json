@@ -21,6 +21,8 @@
   "dependencies": {
     "bootstrap": "^5.0.2",
     "cpx": "^1.5.0",
+    "firebase": "^8.8.0",
+    "firebaseui": "^4.8.1",
     "sirv-cli": "^1.0.0"
   }
 }

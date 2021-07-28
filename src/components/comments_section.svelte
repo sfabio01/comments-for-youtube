@@ -68,6 +68,7 @@
             if (this.readyState == XMLHttpRequest.DONE) {
                 if (this.status == 200) {
                     let obj = JSON.parse(xhr.responseText);
+
                     comments.update(function (val) {
                         let res = { ...val, ...obj.comments };
                         stores.setOffset(Object.keys(res).length);

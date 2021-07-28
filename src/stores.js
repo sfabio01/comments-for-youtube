@@ -30,6 +30,7 @@ export const Status = {
     Failed: 'Failed',
     MissingUsername: 'MissingUsername',
     CommentsEnabled: 'CommentsEnabled',
+    NotLoggedIn: 'NotLoggedIn'
 }
 
 export const status = writable(Status.Initial);
