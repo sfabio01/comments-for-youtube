@@ -1,10 +1,10 @@
 <script>
-	import { BarLoader } from "svelte-loading-spinners";
 	import InputField from "./components/input_field.svelte";
 	import MessageField from "./components/message_field.svelte";
 	import CommentsSection from "./components/comments_section.svelte";
 	import * as stores from "./stores";
-	import { uid, videoId, status } from "./stores";
+	import { uid, videoId, status, username } from "./stores";
+	import ChooseUsername from "./components/choose_username.svelte";
 
 	chrome.tabs.query(
 		{
@@ -26,56 +26,60 @@
 					if (this.status == 403) {
 						let res = JSON.parse(this.responseText);
 						if (res.error.errors[0].reason == "commentsDisabled") {
-							status.set(stores.Status.Enabled);
-
-							return;
+							chrome.identity.getProfileUserInfo(function (
+								infos
+							) {
+								uid.set(infos.id);
+								if (infos.id == "") {
+									// user not signed in
+									stores.message.set(
+										"You are not signed into this browser"
+									);
+									status.set(stores.Status.Failed);
+								} else {
+									// fetch username
+									let xhr = new XMLHttpRequest();
+									xhr.open(
+										"GET",
+										stores.baseURL + "/users/" + infos.id
+									);
+									xhr.onreadystatechange = function () {
+										if (
+											this.readyState ==
+											XMLHttpRequest.DONE
+										) {
+											if (this.status == 200) {
+												username.set(
+													JSON.parse(xhr.responseText)
+														.username
+												);
+												status.set(
+													stores.Status.Success
+												);
+											}
+											if (this.status == 404) {
+												// ask for username
+												status.set(
+													stores.Status
+														.MissingUsername
+												);
+											}
+										}
+									};
+									xhr.send();
+								}
+							});
+						} else {
+							status.set(stores.Status.CommentsEnabled);
 						}
 					}
 				}
-				status.set(stores.Status.Disabled);
 			};
 			xhr.send();
+			status.set(stores.Status.Loading);
 		}
 	);
 
-	chrome.identity.getProfileUserInfo(function (infos) {
-		uid.set(infos.id);
-		if (infos.id == "") {
-			// user not signed in
-			stores.message.set("You are not signed in :/");
-		} else {
-			// fetch username
-			let xhr = new XMLHttpRequest();
-			xhr.open("GET", stores.baseURL + "/users/" + infos.id);
-			xhr.onreadystatechange = function () {
-				if (this.readyState == XMLHttpRequest.DONE) {
-					if (this.status == 200) {
-						stores.setUsername(
-							JSON.parse(xhr.responseText).username
-						);
-						stores.message.set("User: " + stores.username);
-					}
-					if (this.status == 404) {
-						// ask for username
-						let input = "";
-						do {
-							input = prompt("Choose a username").trim();
-						} while (input == "" || input == null);
-						stores.setUsername(input);
-						let xhr = new XMLHttpRequest();
-						xhr.open("POST", stores.baseURL + "/users/" + infos.id);
-						xhr.setRequestHeader(
-							"Content-Type",
-							"application/json"
-						);
-						xhr.send(JSON.stringify({ username: username }));
-						stores.message.set("User: " + stores.username);
-					}
-				}
-			};
-			xhr.send();
-		}
-	});
 	function getUrlParams(url) {
 		var vars = {};
 		var parts = url.replace(
@@ -88,13 +92,18 @@
 	}
 </script>
 
-{#if $status == stores.Status.Enabled}
+{#if $status == stores.Status.Success}
 	<InputField />
 	<MessageField />
 	<CommentsSection />
-{:else if $status == stores.Status.Disabled}
+{:else if $status == stores.Status.CommentsEnabled}
 	Comments are already Enabled
+{:else if $status == stores.Status.MissingUsername}
+	<ChooseUsername />
+{:else if $status == stores.Status.Failed}
+	<MessageField />
+{:else if $status == stores.Status.Loading}
+	<div class="spinner-border text-primary " role="status">
+		<span class="visually-hidden">Loading...</span>
+	</div>
 {/if}
-
-<style>
-</style>

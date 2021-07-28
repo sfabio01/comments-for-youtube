@@ -1,6 +1,6 @@
 <script>
     import * as stores from "./../stores";
-    import { uid, comments, videoId } from "./../stores";
+    import { uid, comments, videoId, username } from "./../stores";
     export let commentId = "";
 
     let viewinput = false;
@@ -38,7 +38,7 @@
             xhr.send(
                 JSON.stringify({
                     authorId: $uid,
-                    authorName: stores.username,
+                    authorName: $username,
                     text: replyText,
                 })
             );
@@ -46,10 +46,16 @@
     }
 </script>
 
-<button on:click={changeInputVisibility}>REPLY</button>
+<button class="btn btn-sm" on:click={changeInputVisibility}>REPLY</button>
 
 {#if viewinput}
-    <input type="text" bind:value={input} placeholder="Add a reply..." />
-    <button on:click={reply}>SEND</button>
-    <button on:click={changeInputVisibility}>X</button>
+    <div class="input-group d-flex justify-content-center px-2">
+        <input
+            type="text"
+            class="form-control form-control-sm"
+            bind:value={input}
+            placeholder="Add a reply..."
+        />
+        <button class="btn btn-sm btn-primary" on:click={reply}>ADD</button>
+    </div>
 {/if}

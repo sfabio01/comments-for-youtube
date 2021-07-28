@@ -7,7 +7,7 @@ export const videoId = writable("");
 
 export const uid = writable("");
 
-export var username = "";
+export const username = writable("");
 
 export function setUsername(value) {
     username = value;
@@ -25,8 +25,11 @@ export const comments = writable({});
 
 export const Status = {
     Initial: 'Initial',
-    Enabled: 'Enabled',
-    Disabled: 'Disabled',
+    Loading: 'Loading',
+    Success: 'Success',
+    Failed: 'Failed',
+    MissingUsername: 'MissingUsername',
+    CommentsEnabled: 'CommentsEnabled',
 }
 
 export const status = writable(Status.Initial);

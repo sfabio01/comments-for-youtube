@@ -1,6 +1,6 @@
 <script>
     import * as stores from "./../stores";
-    import { uid, comments, message, videoId } from "./../stores";
+    import { uid, comments, message, videoId, username } from "./../stores";
     let input = "";
 
     function addcomment() {
@@ -32,7 +32,7 @@
             xhr.send(
                 JSON.stringify({
                     text: comment,
-                    authorName: stores.username,
+                    authorName: $username,
                     authorId: $uid,
                 })
             );
@@ -40,5 +40,20 @@
     }
 </script>
 
-<input type="text" bind:value={input} placeholder="Add a comment..." />
-<button on:click={addcomment}>SUBMIT</button>
+<div class="container">
+    <div class="input-group my-2 mx-auto">
+        <input
+            type="text"
+            class="form-control form-control-sm"
+            bind:value={input}
+            placeholder="({$username}) Add a comment..."
+            aria-describedby="button-addon2"
+        />
+        <button
+            on:click={addcomment}
+            type="button"
+            class="btn btn-primary btn-sm"
+            id="button-addon2">ADD</button
+        >
+    </div>
+</div>
