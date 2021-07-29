@@ -69,39 +69,43 @@
 
     async function downloadComments(uid, videoId) {
         if (uid == "" || videoId == "") return;
-        let collection_ref = db
-            .collection("videos")
-            .doc(videoId)
-            .collection("comments");
+        try {
+            let collection_ref = db
+                .collection("videos")
+                .doc(videoId)
+                .collection("comments");
 
-        let query;
-        if (stores.lastCommentUpdateTime == "")
-            query = collection_ref.orderBy("lastUpdateAt", "desc").limit(4);
-        else
-            query = collection_ref
-                .orderBy("lastUpdateAt", "desc")
-                .startAfter(stores.lastCommentUpdateTime)
-                .limit(4);
-        let snap = await query.get();
-        let likes_snap = await db.collection("users").doc(uid).get();
-        let liked_list = likes_snap.data();
-        ["likes"][videoId];
-        let obj = {};
-        snap.forEach((doc) => {
-            let comment = doc.data();
-            if (doc.id in liked_list) comment["liked"] = true;
-            else comment["liked"] = false;
-            obj[doc.id] = comment;
-            stores.setLastCommentUpdateTime(comment.lastUpdateAt);
-        });
-        console.log(obj);
-        comments.update(function (comments) {
-            return { ...comments, ...obj };
-        });
+            let query;
+            if (stores.lastCommentUpdateTime == "")
+                query = collection_ref.orderBy("lastUpdateAt", "desc").limit(4);
+            else
+                query = collection_ref
+                    .orderBy("lastUpdateAt", "desc")
+                    .startAfter(stores.lastCommentUpdateTime)
+                    .limit(4);
+            let snap = await query.get();
+            let likes_snap = await db.collection("users").doc(uid).get();
+            let liked_list = likes_snap.data()["likes"][videoId];
+
+            let obj = {};
+            snap.forEach((doc) => {
+                let comment = doc.data();
+                if (liked_list.includes(doc.id)) comment["liked"] = true;
+                else comment["liked"] = false;
+                obj[doc.id] = comment;
+                stores.setLastCommentUpdateTime(comment.lastUpdateAt);
+            });
+            comments.update(function (comments) {
+                return { ...comments, ...obj };
+            });
+        } catch (error) {
+            stores.message.set("Can't download the comments for this video");
+            console.log(error);
+        }
     }
     function reload() {
         now = new Date();
-        stores.setOffset(0);
+        stores.setLastCommentUpdateTime("");
         comments.set({});
         downloadComments(userId, myVideoId);
     }
