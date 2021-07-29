@@ -31,10 +31,10 @@
 							chrome.runtime.sendMessage(
 								{ command: "checkAuth" },
 								(response) => {
-									console.log(response);
+									//console.log(response);
 									if (response.status == "success") {
 										uid.set(response.message.uid);
-										// fetch username
+										// check username
 										let xhr = new XMLHttpRequest();
 										xhr.open(
 											"GET",
@@ -73,6 +73,8 @@
 						} else {
 							status.set(stores.Status.CommentsEnabled);
 						}
+					} else {
+						status.set(stores.Status.CommentsEnabled);
 					}
 				}
 			};

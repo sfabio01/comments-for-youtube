@@ -1,3 +1,12 @@
+// EXTENSION ACTIVATION 
+chrome.tabs.onUpdated.addListener(function (tabId, info, tab) {
+    if (tab.url.startsWith("https://www.youtube.com/watch?v=")) {
+        chrome.browserAction.enable(tabId);
+    } else {
+        chrome.browserAction.disable(tabId);
+    }
+});
+
 // Your web app's Firebase configuration
 var firebaseConfig = {
     apiKey: "AIzaSyAw6T0-TjETx7x7giOZQH4HzJurVsVm2IY",
@@ -11,18 +20,8 @@ var firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-console.log(firebase);
-
 var provider = new firebase.auth.GoogleAuthProvider();
 
-// EXTENSION ACTIVATION 
-chrome.tabs.onUpdated.addListener(function (tabId, info, tab) {
-    if (tab.url.startsWith("https://www.youtube.com/watch?v=")) {
-        chrome.action.enable(tabId);
-    } else {
-        chrome.action.disable(tabId);
-    }
-});
 
 // USER AUTH METHODS
 chrome.runtime.onMessage.addListener((msg, sender, response) => {
