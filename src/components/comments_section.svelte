@@ -7,6 +7,12 @@
     import { DateDiff } from "./../utils";
     import ReloadButton from "./reload_button.svelte";
     import LogoutButton from "./logout_button.svelte";
+    import firebase from "firebase/app";
+    import "firebase/firestore";
+
+    var db = firebase.firestore();
+
+    let now = new Date();
 
     let userId;
     $: userId = $uid;
@@ -14,8 +20,6 @@
     $: myVideoId = $videoId;
 
     $: downloadComments(userId, myVideoId);
-
-    let now = new Date();
 
     function like(commentId) {
         let xhr = new XMLHttpRequest();
@@ -63,37 +67,37 @@
         xhr.send(JSON.stringify({ uid: userId }));
     }
 
-    function downloadComments(uid, videoId) {
+    async function downloadComments(uid, videoId) {
         if (uid == "" || videoId == "") return;
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    let obj = JSON.parse(xhr.responseText);
+        let collection_ref = db
+            .collection("videos")
+            .doc(videoId)
+            .collection("comments");
 
-                    comments.update(function (val) {
-                        let res = { ...val, ...obj.comments };
-                        stores.setOffset(Object.keys(res).length);
-                        return res;
-                    });
-                } else {
-                    stores.message.set("An error occured");
-                    console.log(xhr.responseText);
-                }
-            }
-        };
-
-        xhr.open(
-            "POST",
-            stores.baseURL + "/" + videoId + "/" + stores.offset.toString()
-        );
-        xhr.setRequestHeader("Content-Type", "application/json");
-
-        xhr.send(
-            JSON.stringify({
-                uid: userId,
-            })
-        );
+        let query;
+        if (stores.lastCommentUpdateTime == "")
+            query = collection_ref.orderBy("lastUpdateAt", "desc").limit(4);
+        else
+            query = collection_ref
+                .orderBy("lastUpdateAt", "desc")
+                .startAfter(stores.lastCommentUpdateTime)
+                .limit(4);
+        let snap = await query.get();
+        let likes_snap = await db.collection("users").doc(uid).get();
+        let liked_list = likes_snap.data();
+        ["likes"][videoId];
+        let obj = {};
+        snap.forEach((doc) => {
+            let comment = doc.data();
+            if (doc.id in liked_list) comment["liked"] = true;
+            else comment["liked"] = false;
+            obj[doc.id] = comment;
+            stores.setLastCommentUpdateTime(comment.lastUpdateAt);
+        });
+        console.log(obj);
+        comments.update(function (comments) {
+            return { ...comments, ...obj };
+        });
     }
     function reload() {
         now = new Date();
@@ -165,7 +169,7 @@
     <hr />
     <div class="container">
         <b>{comment.authorName}</b>
-        <i>{DateDiff.getString(new Date(comment.lastUpdateAt), now)}</i> <br />
+        <i>{DateDiff.getString(comment.lastUpdateAt.toDate(), now)}</i> <br />
         {comment.text} <br />
         <span class="align-middle">{comment.likes}</span>
         {#if comment.liked}

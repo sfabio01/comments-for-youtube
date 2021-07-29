@@ -13,8 +13,6 @@ export function setUsername(value) {
     username = value;
 }
 
-export var offset = 0;
-
 export function setOffset(value) {
     offset = value;
 }
@@ -22,6 +20,11 @@ export function setOffset(value) {
 export const message = writable("");
 
 export const comments = writable({});
+
+export var lastCommentUpdateTime = "";
+export function setLastCommentUpdateTime(value) {
+    lastCommentUpdateTime = value;
+}
 
 export const Status = {
     Initial: 'Initial',

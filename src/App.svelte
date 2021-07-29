@@ -6,6 +6,19 @@
 	import { uid, videoId, status, username } from "./stores";
 	import ChooseUsername from "./components/choose_username.svelte";
 	import LoginWithGoogle from "./components/login_with_google.svelte";
+	import firebase from "firebase/app";
+
+	var firebaseConfig = {
+		apiKey: "AIzaSyAw6T0-TjETx7x7giOZQH4HzJurVsVm2IY",
+		authDomain: "comments-for--315620.firebaseapp.com",
+		projectId: "comments-for-youtube-315620",
+		storageBucket: "comments-for-youtube-315620.appspot.com",
+		messagingSenderId: "688328849184",
+		appId: "1:688328849184:web:693eeec3da713f0b348945",
+		measurementId: "G-4NTQRB4M6S",
+	};
+
+	firebase.initializeApp(firebaseConfig);
 
 	chrome.tabs.query(
 		{
