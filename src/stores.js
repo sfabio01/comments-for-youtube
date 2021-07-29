@@ -13,9 +13,7 @@ export function setUsername(value) {
     username = value;
 }
 
-export function setOffset(value) {
-    offset = value;
-}
+
 
 export const message = writable("");
 
