@@ -1,6 +1,6 @@
 <script>
     import { baseURL, uid, comments, message, videoId } from "./../stores";
-    import { DateDiff } from "./../utils";
+    import { DateDiff } from "../date_utility";
     import * as stores from "./../stores";
 
     export let commentId = "";
