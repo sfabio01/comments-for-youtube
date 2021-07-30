@@ -30,15 +30,16 @@
                     .doc($uid)
                     .update({
                         [`comments.${$videoId}`]:
-                            firebase.firestore.FieldValue.arrayUnion([
-                                commentRef,
-                            ]),
+                            firebase.firestore.FieldValue.arrayUnion(
+                                commentRef
+                            ),
                     });
                 let snap = await commentRef.get();
                 console.log(snap.id);
                 comments.update(function (old) {
                     return { ...{ [snap.id]: snap.data() }, ...old };
                 });
+                input = "";
             } catch (error) {
                 message.set("An error occured");
                 console.log(error);
