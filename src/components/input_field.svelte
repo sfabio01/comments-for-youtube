@@ -22,7 +22,6 @@
                     .doc($videoId)
                     .collection("comments")
                     .doc();
-                console.log(commentRef.id);
                 await commentRef.set(obj);
                 await db
                     .collection("users")

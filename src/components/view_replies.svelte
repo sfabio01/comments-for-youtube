@@ -1,7 +1,10 @@
 <script>
-    import { baseURL, uid, comments, message, videoId } from "./../stores";
+    import { uid, comments, message, videoId } from "./../stores";
     import { DateDiff } from "../date_utility";
-    import * as stores from "./../stores";
+    import firebase from "firebase/app";
+    import "firebase/firestore";
+
+    var db = firebase.firestore();
 
     export let commentId = "";
     let visible = false;
@@ -13,66 +16,60 @@
         visible = !visible;
     }
 
-    function fetchReplies() {
+    async function fetchReplies() {
         if (commentId == "") return;
         now = new Date();
         if ("replies" in myComments[commentId]) {
             changeVisibility();
             return;
         }
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    let obj = JSON.parse(xhr.responseText);
-                    comments.update(function (comments) {
-                        comments[commentId].replies = obj.replies;
-                        return comments;
-                    });
-                    changeVisibility();
-                } else {
-                    message.set("An error accured");
-                    console.log(xhr.responseText);
-                }
-            }
-        };
-
-        xhr.open("POST", baseURL + "/" + $videoId + "/replies/" + commentId);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(
-            JSON.stringify({
-                uid: $uid,
-            })
-        );
+        try {
+            let docs = await db
+                .collection("videos")
+                .doc($videoId)
+                .collection("comments")
+                .doc(commentId)
+                .collection("replies")
+                .get();
+            let obj = {};
+            docs.forEach((doc) => {
+                obj[doc.id] = doc.data();
+            });
+            comments.update(function (value) {
+                value[commentId].replies = obj;
+                return value;
+            });
+            changeVisibility();
+        } catch (error) {
+            console.log(error);
+            message.set("An error occured");
+        }
     }
-    function deleteReply(replyId) {
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    // success
-                    comments.update(function (comments) {
-                        delete comments[commentId].replies[replyId];
-                        return comments;
-                    });
-                } else {
-                    // error
-                    stores.message.set("An error occured");
-                    console.log(this.responseText);
-                }
-            }
-        };
-        xhr.open(
-            "DELETE",
-            stores.baseURL + "/" + $videoId + "/reply/" + commentId
-        );
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(
-            JSON.stringify({
-                authorId: $uid,
-                replyId: replyId,
-            })
-        );
+    async function deleteReply(replyId) {
+        try {
+            let replyRef = db
+                .collection("videos")
+                .doc($videoId)
+                .collection("comments")
+                .doc(commentId)
+                .collection("replies")
+                .doc(replyId);
+            await replyRef.delete();
+            comments.update(function (comments) {
+                delete comments[commentId].replies[replyId];
+                return comments;
+            });
+            await db
+                .collection("users")
+                .doc($uid)
+                .update({
+                    [`comments.${$videoId}`]:
+                        firebase.firestore.FieldValue.arrayRemove(replyRef),
+                });
+        } catch (error) {
+            message.set("An error occured");
+            console.log(error);
+        }
     }
 </script>
 
@@ -94,7 +91,7 @@
     {#each Object.entries(myComments[commentId].replies) as [id, reply]}
         <div style="margin-left: 15px">
             <b>{reply.authorName}</b>
-            <i>{DateDiff.getString(new Date(reply.lastUpdateAt), now)}</i>
+            <i>{DateDiff.getString(reply.lastUpdateAt.toDate(), now)}</i>
             <br />
             {reply.text} <br />
             {#if reply.authorId == $uid}
