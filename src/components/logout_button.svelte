@@ -6,6 +6,8 @@
             { command: "logoutAuth", data: {} },
             (response) => {
                 if (response.status == "success") {
+                    stores.comments.set({});
+                    stores.setLastCommentUpdateTime("");
                     status.set(stores.Status.NotLoggedIn);
                 } else {
                     stores.message.set(
