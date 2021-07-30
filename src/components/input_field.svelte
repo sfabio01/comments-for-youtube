@@ -1,5 +1,4 @@
 <script>
-    import * as stores from "./../stores";
     import { uid, comments, message, videoId, username } from "./../stores";
     let input = "";
     import firebase from "firebase/app";
