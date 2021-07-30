@@ -35,9 +35,10 @@
                             ),
                     });
                 let snap = await commentRef.get();
-                console.log(snap.id);
                 comments.update(function (old) {
-                    return { ...{ [snap.id]: snap.data() }, ...old };
+                    let newComment = snap.data();
+                    newComment.replies = {};
+                    return { [snap.id]: newComment, ...old };
                 });
                 input = "";
             } catch (error) {
