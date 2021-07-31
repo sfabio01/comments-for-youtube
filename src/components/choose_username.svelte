@@ -17,7 +17,7 @@
             })
             .catch((error) => {
                 console.log(error);
-                stores.message.set("An error occured");
+                stores.message.set(error.message);
                 status.set(stores.Status.Failed);
             });
     }

@@ -42,7 +42,7 @@
             changeVisibility();
         } catch (error) {
             console.log(error);
-            message.set("An error occured");
+            message.set(error.message);
         }
     }
     async function deleteReply(replyId) {
@@ -67,7 +67,7 @@
                         firebase.firestore.FieldValue.arrayRemove(replyRef),
                 });
         } catch (error) {
-            message.set("An error occured");
+            message.set(error.message);
             console.log(error);
         }
     }

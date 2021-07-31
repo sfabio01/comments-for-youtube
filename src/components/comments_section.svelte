@@ -51,9 +51,7 @@
                 });
             } catch (error) {
                 console.log(error);
-                stores.message.set(
-                    "An error occured. View the logs for more details"
-                );
+                stores.message.set(error.message);
             }
         } else {
             // Comment already liked
@@ -96,9 +94,7 @@
                 });
             } catch (error) {
                 console.log(error);
-                stores.message.set(
-                    "An error occured. View the logs for more details"
-                );
+                stores.message.set(error.message);
             }
         } else {
             // Comment already not-liked
@@ -141,7 +137,7 @@
                 return { ...comments, ...obj };
             });
         } catch (error) {
-            stores.message.set("Can't download the comments for this video");
+            stores.message.set(error.message);
             console.log(error);
         }
     }
@@ -179,7 +175,7 @@
                 return comments;
             });
         } catch (error) {
-            stores.message.set("An error occured");
+            stores.message.set(error.message);
             console.log(error);
         }
     }
@@ -203,7 +199,7 @@
                         firebase.firestore.FieldValue.arrayRemove(commentRef),
                 });
         } catch (error) {
-            stores.message.set("An error occured");
+            stores.message.set(error.message);
             console.log(error);
         }
     }

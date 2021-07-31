@@ -40,7 +40,7 @@
                 });
                 input = "";
             } catch (error) {
-                message.set("An error occured");
+                message.set(error.message);
                 console.log(error);
             }
         }

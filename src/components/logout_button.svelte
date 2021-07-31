@@ -16,9 +16,7 @@
             })
             .catch((error) => {
                 console.log(error);
-                stores.message.set(
-                    "An error occured. Try restarting the extension"
-                );
+                stores.message.set(error.message);
                 status.set(stores.Status.Failed);
             });
     }
