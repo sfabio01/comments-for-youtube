@@ -13,7 +13,10 @@ export function setUsername(value) {
     username = value;
 }
 
-
+export var userData = null;
+export function setUserData(data) {
+    userData = data;
+}
 
 export const message = writable("");
 

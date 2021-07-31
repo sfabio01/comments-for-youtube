@@ -1,25 +1,25 @@
 <script>
-    import { username, status, uid } from "./../stores";
+    import { username, status } from "./../stores";
     import * as stores from "./../stores";
+    import firebase from "firebase/app";
+    import "firebase/auth";
+
     let input = "";
     function addUsername() {
         if (input.length < 4) return;
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", stores.baseURL + "/users/" + $uid);
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 201) {
-                    username.set(input);
-                    status.set(stores.Status.Success);
-                }
-            }
-        };
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(
-            JSON.stringify({
-                username: input,
+        stores.userData
+            .updateProfile({
+                displayName: input,
             })
-        );
+            .then(() => {
+                username.set(input);
+                status.set(stores.Status.Success);
+            })
+            .catch((error) => {
+                console.log(error);
+                stores.message.set("An error occured");
+                status.set(stores.Status.Failed);
+            });
     }
 </script>
 

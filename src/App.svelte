@@ -6,17 +6,9 @@
 	import { uid, videoId, status, username } from "./stores";
 	import ChooseUsername from "./components/choose_username.svelte";
 	import LoginWithGoogle from "./components/login_with_google.svelte";
+	import { firebaseConfig, apiKey } from "./secrets";
 	import firebase from "firebase/app";
-
-	var firebaseConfig = {
-		apiKey: "AIzaSyAw6T0-TjETx7x7giOZQH4HzJurVsVm2IY",
-		authDomain: "comments-for--315620.firebaseapp.com",
-		projectId: "comments-for-youtube-315620",
-		storageBucket: "comments-for-youtube-315620.appspot.com",
-		messagingSenderId: "688328849184",
-		appId: "1:688328849184:web:693eeec3da713f0b348945",
-		measurementId: "G-4NTQRB4M6S",
-	};
+	import "firebase/auth";
 
 	firebase.initializeApp(firebaseConfig);
 
@@ -33,7 +25,8 @@
 				"GET",
 				"https://youtube.googleapis.com/youtube/v3/commentThreads?part=id&videoId=" +
 					$videoId +
-					"&key=AIzaSyAzRbVzVFIftvpw5To_YP67scHt2c5ccYQ"
+					"&key=" +
+					apiKey
 			);
 			xhr.onreadystatechange = function () {
 				if (this.readyState == XMLHttpRequest.DONE) {
@@ -41,48 +34,44 @@
 						let res = JSON.parse(this.responseText);
 						if (res.error.errors[0].reason == "commentsDisabled") {
 							//Check user logged in
-							chrome.runtime.sendMessage(
-								{ command: "checkAuth" },
-								(response) => {
-									//console.log(response);
-									if (response.status == "success") {
-										uid.set(response.message.uid);
-										// check username
-										let xhr = new XMLHttpRequest();
-										xhr.open(
-											"GET",
-											stores.baseURL + "/users/" + $uid
-										);
-										xhr.onreadystatechange = function () {
-											if (
-												this.readyState ==
-												XMLHttpRequest.DONE
-											) {
-												if (this.status == 200) {
-													username.set(
-														JSON.parse(
-															xhr.responseText
-														).username
-													);
-													status.set(
-														stores.Status.Success
-													);
-												}
-												if (this.status == 404) {
-													// ask for username
-													status.set(
-														stores.Status
-															.MissingUsername
-													);
-												}
-											}
-										};
-										xhr.send();
-									} else {
-										status.set(stores.Status.NotLoggedIn);
-									}
+							var user = firebase.auth().currentUser;
+							if (user) {
+								stores.setUserData(user);
+								uid.set(user.uid);
+								if (user.displayName == "") {
+									// Missing username
+									status.set(stores.Status.MissingUsername);
+								} else {
+									username.set(user.displayName);
+									status.set(stores.Status.Success);
 								}
-							);
+							} else {
+								chrome.storage.local.get(
+									"user",
+									function (result) {
+										if ("user" in result) {
+											let user = result.user;
+											stores.setUserData(user);
+											uid.set(user.uid);
+											if (user.displayName == "") {
+												status.set(
+													stores.Status
+														.MissingUsername
+												);
+											} else {
+												username.set(user.displayName);
+												status.set(
+													stores.Status.Success
+												);
+											}
+										} else {
+											status.set(
+												stores.Status.NotLoggedIn
+											);
+										}
+									}
+								);
+							}
 						} else {
 							status.set(stores.Status.CommentsEnabled);
 						}
