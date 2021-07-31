@@ -110,7 +110,12 @@
 {:else if $status == stores.Status.NotLoggedIn}
 	<LoginWithGoogle />
 {:else if $status == stores.Status.Loading}
-	<div class="spinner-border text-primary " role="status">
-		<span class="visually-hidden">Loading...</span>
+	<div
+		class="d-flex justify-content-center align-items-center"
+		style="height: 600px;"
+	>
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
 	</div>
 {/if}

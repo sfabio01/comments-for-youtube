@@ -32,7 +32,11 @@
     }
 </script>
 
-<div class="container " />
-<button type="button" class="btn btn-primary m-auto " on:click={login}
-    ><b>CONTINUE WITH GOOGLE</b></button
+<div
+    class="d-flex justify-content-center align-items-center"
+    style="height: 600px;"
 >
+    <button type="button" class="btn btn-primary" on:click={login}
+        ><b>CONTINUE WITH GOOGLE</b></button
+    >
+</div>
