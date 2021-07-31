@@ -1,41 +1,48 @@
 <script>
-    import * as stores from "./../stores";
     import { uid, comments, message, videoId, username } from "./../stores";
     let input = "";
+    import firebase from "firebase/app";
+    import "firebase/firestore";
 
-    function addcomment() {
+    var db = firebase.firestore();
+
+    async function addcomment() {
         let comment = input.trim();
         if (comment != "") {
-            let xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function () {
-                if (this.readyState == XMLHttpRequest.DONE) {
-                    if (this.status == 201) {
-                        // success
-                        let obj = JSON.parse(xhr.responseText);
-                        input = "";
-                        comments.update(function (comments) {
-                            comments = {
-                                [obj.commentId]: obj.comment,
-                                ...comments,
-                            };
-                            console.log(comments);
-                            return comments;
-                        });
-                    } else {
-                        // error
-                        message.set("An error occured");
-                    }
-                }
+            let obj = {
+                text: comment,
+                authorName: $username,
+                authorId: $uid,
+                likes: 0,
+                lastUpdateAt: firebase.firestore.FieldValue.serverTimestamp(),
             };
-            xhr.open("POST", stores.baseURL + "/" + $videoId);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.send(
-                JSON.stringify({
-                    text: comment,
-                    authorName: $username,
-                    authorId: $uid,
-                })
-            );
+            try {
+                let commentRef = db
+                    .collection("videos")
+                    .doc($videoId)
+                    .collection("comments")
+                    .doc();
+                await commentRef.set(obj);
+                await db
+                    .collection("users")
+                    .doc($uid)
+                    .update({
+                        [`comments.${$videoId}`]:
+                            firebase.firestore.FieldValue.arrayUnion(
+                                commentRef
+                            ),
+                    });
+                let snap = await commentRef.get();
+                comments.update(function (old) {
+                    let newComment = snap.data();
+                    newComment.replies = {};
+                    return { [snap.id]: newComment, ...old };
+                });
+                input = "";
+            } catch (error) {
+                message.set(error.message);
+                console.log(error);
+            }
         }
     }
 </script>

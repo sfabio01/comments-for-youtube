@@ -1,20 +1,25 @@
 <script>
     import { status } from "./../stores";
     import * as stores from "./../stores";
+    import firebase from "firebase/app";
+    import "firebase/auth";
+
     function logout() {
-        chrome.runtime.sendMessage(
-            { command: "logoutAuth", data: {} },
-            (response) => {
-                if (response.status == "success") {
-                    status.set(stores.Status.NotLoggedIn);
-                } else {
-                    stores.message.set(
-                        "An error occured. Try restarting the extension"
-                    );
-                    status.set(stores.Status.Failed);
-                }
-            }
-        );
+        firebase
+            .auth()
+            .signOut()
+            .then(() => {
+                stores.comments.set({});
+                stores.setLastCommentUpdateTime("");
+                stores.setUserData(null);
+                chrome.storage.local.set({});
+                status.set(stores.Status.NotLoggedIn);
+            })
+            .catch((error) => {
+                console.log(error);
+                stores.message.set(error.message);
+                status.set(stores.Status.Failed);
+            });
     }
 </script>
 

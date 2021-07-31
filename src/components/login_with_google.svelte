@@ -1,41 +1,42 @@
 <script>
     import { uid, status, username } from "./../stores";
     import * as stores from "./../stores";
+    import firebase from "firebase/app";
+    import "firebase/auth";
+
+    var provider = new firebase.auth.GoogleAuthProvider();
 
     function login() {
-        chrome.runtime.sendMessage(
-            { command: "loginUser", data: {} },
-            (response) => {
-                console.log(response);
-                if (response.status == "success") {
-                    uid.set(response.message.uid);
-                    // fetch username
-                    let xhr = new XMLHttpRequest();
-                    xhr.open("GET", stores.baseURL + "/users/" + $uid);
-                    xhr.onreadystatechange = function () {
-                        if (this.readyState == XMLHttpRequest.DONE) {
-                            if (this.status == 200) {
-                                username.set(
-                                    JSON.parse(xhr.responseText).username
-                                );
-                                status.set(stores.Status.Success);
-                            }
-                            if (this.status == 404) {
-                                // ask for username
-                                status.set(stores.Status.MissingUsername);
-                            }
-                        }
-                    };
-                    xhr.send();
+        firebase
+            .auth()
+            .signInWithPopup(provider)
+            .then((result) => {
+                let user = result.user;
+                stores.setUserData(user);
+                uid.set(user.uid);
+                if (user.displayName == "") {
+                    status.set(stores.Status.MissingUsername);
                 } else {
-                    status.set(stores.Status.Failed);
+                    username.set(user.displayName);
+                    chrome.storage.local.set({ user: user }, function () {
+                        console.log("User data stored in storage: " + user);
+                    });
+                    status.set(stores.Status.Success);
                 }
-            }
-        );
+            })
+            .catch((error) => {
+                console.log(error);
+                stores.message.set(error.message);
+                status.set(stores.Status.Failed);
+            });
     }
 </script>
 
-<div class="container " />
-<button type="button" class="btn btn-primary m-auto " on:click={login}
-    ><b>CONTINUE WITH GOOGLE</b></button
+<div
+    class="d-flex justify-content-center align-items-center"
+    style="height: 600px;"
 >
+    <button type="button" class="btn btn-primary" on:click={login}
+        ><b>CONTINUE WITH GOOGLE</b></button
+    >
+</div>

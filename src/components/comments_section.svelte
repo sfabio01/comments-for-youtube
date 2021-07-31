@@ -4,9 +4,15 @@
     import ViewReplies from "./view_replies.svelte";
     import * as stores from "./../stores";
     import { comments, uid, videoId } from "./../stores";
-    import { DateDiff } from "./../utils";
+    import { DateDiff } from "../date_utility";
     import ReloadButton from "./reload_button.svelte";
     import LogoutButton from "./logout_button.svelte";
+    import firebase from "firebase/app";
+    import "firebase/firestore";
+
+    var db = firebase.firestore();
+
+    let now = new Date();
 
     let userId;
     $: userId = $uid;
@@ -15,147 +21,187 @@
 
     $: downloadComments(userId, myVideoId);
 
-    let now = new Date();
-
-    function like(commentId) {
-        let xhr = new XMLHttpRequest();
-        xhr.open(
-            "POST",
-            stores.baseURL + "/" + $videoId + "/like/" + commentId
-        );
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    comments.update(function (val) {
-                        val[commentId].liked = true;
-                        val[commentId].likes++;
-                        return val;
+    async function like(commentId) {
+        let likesSnap = await db.collection("users").doc(userId).get();
+        let data = likesSnap.data();
+        let likesList = [];
+        if ("likes" in data && myVideoId in data["likes"])
+            likesList = data["likes"][myVideoId];
+        if (!likesList.includes(commentId)) {
+            try {
+                await db
+                    .collection("videos")
+                    .doc(myVideoId)
+                    .collection("comments")
+                    .doc(commentId)
+                    .update({
+                        likes: firebase.firestore.FieldValue.increment(1),
                     });
-                } else {
-                    // failed
-                }
+                await db
+                    .collection("users")
+                    .doc(userId)
+                    .update({
+                        [`likes.${myVideoId}`]:
+                            firebase.firestore.FieldValue.arrayUnion(commentId),
+                    });
+                comments.update(function (val) {
+                    val[commentId].liked = true;
+                    val[commentId].likes++;
+                    return val;
+                });
+            } catch (error) {
+                console.log(error);
+                stores.message.set(error.message);
             }
-        };
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify({ uid: userId }));
+        } else {
+            // Comment already liked
+            comments.update(function (val) {
+                val[commentId].liked = true;
+                return val;
+            });
+        }
     }
 
-    function removelike(commentId) {
-        let xhr = new XMLHttpRequest();
-        xhr.open(
-            "DELETE",
-            stores.baseURL + "/" + $videoId + "/like/" + commentId
-        );
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    comments.update(function (val) {
-                        val[commentId].liked = false;
-                        val[commentId].likes--;
-                        return val;
+    async function removelike(commentId) {
+        let likesSnap = await db.collection("users").doc(userId).get();
+        let data = likesSnap.data();
+        let likesList = [];
+        if ("likes" in data && myVideoId in data["likes"])
+            likesList = data["likes"][myVideoId];
+        if (likesList.includes(commentId)) {
+            try {
+                await db
+                    .collection("videos")
+                    .doc(myVideoId)
+                    .collection("comments")
+                    .doc(commentId)
+                    .update({
+                        likes: firebase.firestore.FieldValue.increment(-1),
                     });
-                } else {
-                    // failed
-                }
+                await db
+                    .collection("users")
+                    .doc(userId)
+                    .update({
+                        [`likes.${myVideoId}`]:
+                            firebase.firestore.FieldValue.arrayRemove(
+                                commentId
+                            ),
+                    });
+                comments.update(function (val) {
+                    val[commentId].liked = false;
+                    val[commentId].likes--;
+                    return val;
+                });
+            } catch (error) {
+                console.log(error);
+                stores.message.set(error.message);
             }
-        };
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify({ uid: userId }));
+        } else {
+            // Comment already not-liked
+            comments.update(function (val) {
+                val[commentId].liked = false;
+                return val;
+            });
+        }
     }
 
-    function downloadComments(uid, videoId) {
+    async function downloadComments(uid, videoId) {
         if (uid == "" || videoId == "") return;
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    let obj = JSON.parse(xhr.responseText);
+        try {
+            let collection_ref = db
+                .collection("videos")
+                .doc(videoId)
+                .collection("comments");
 
-                    comments.update(function (val) {
-                        let res = { ...val, ...obj.comments };
-                        stores.setOffset(Object.keys(res).length);
-                        return res;
-                    });
-                } else {
-                    stores.message.set("An error occured");
-                    console.log(xhr.responseText);
-                }
-            }
-        };
+            let query;
+            if (stores.lastCommentUpdateTime == "")
+                query = collection_ref.orderBy("lastUpdateAt", "desc").limit(4);
+            else
+                query = collection_ref
+                    .orderBy("lastUpdateAt", "desc")
+                    .startAfter(stores.lastCommentUpdateTime)
+                    .limit(4);
+            let snap = await query.get();
+            let likes_snap = await db.collection("users").doc(uid).get();
+            let liked_list = likes_snap.data()["likes"][videoId];
 
-        xhr.open(
-            "POST",
-            stores.baseURL + "/" + videoId + "/" + stores.offset.toString()
-        );
-        xhr.setRequestHeader("Content-Type", "application/json");
-
-        xhr.send(
-            JSON.stringify({
-                uid: userId,
-            })
-        );
+            let obj = {};
+            snap.forEach((doc) => {
+                let comment = doc.data();
+                if (liked_list.includes(doc.id)) comment["liked"] = true;
+                else comment["liked"] = false;
+                obj[doc.id] = comment;
+                stores.setLastCommentUpdateTime(comment.lastUpdateAt);
+            });
+            comments.update(function (comments) {
+                return { ...comments, ...obj };
+            });
+        } catch (error) {
+            stores.message.set(error.message);
+            console.log(error);
+        }
     }
     function reload() {
         now = new Date();
-        stores.setOffset(0);
+        stores.setLastCommentUpdateTime("");
         comments.set({});
         downloadComments(userId, myVideoId);
     }
-    function editComment(commentId, text) {
+    async function editComment(commentId, text) {
         let editedComment = prompt("Edit the comment", text);
         if (editedComment == null) return;
         editedComment = editedComment.trim();
-        if (editedComment == "") return;
-
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 201) {
-                    // success
-                    let obj = JSON.parse(xhr.responseText);
-                    comments.update(function (comments) {
-                        comments[commentId] = obj.comment;
-                        return comments;
-                    });
-                } else {
-                    // error
-                    stores.message.set("An error occured");
-                }
-            }
-        };
-        xhr.open("PUT", stores.baseURL + "/" + $videoId);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(
-            JSON.stringify({
+        if (editedComment == "" || editedComment == null) {
+            stores.message.set("Invalid input");
+            return;
+        }
+        try {
+            let newObj = {
                 text: editedComment,
-                commentId: commentId,
-            })
-        );
+                lastUpdateAt: firebase.firestore.FieldValue.serverTimestamp(),
+            };
+            let commentRef = db
+                .collection("videos")
+                .doc(myVideoId)
+                .collection("comments")
+                .doc(commentId);
+            await commentRef.update(newObj);
+            let snap = await commentRef.get();
+            let data = snap.data();
+            comments.update(function (comments) {
+                let liked = comments[commentId].liked;
+                comments[commentId] = data;
+                comments[commentId].liked = liked;
+                return comments;
+            });
+        } catch (error) {
+            stores.message.set(error.message);
+            console.log(error);
+        }
     }
-    function deleteComment(commentId) {
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (this.readyState == XMLHttpRequest.DONE) {
-                if (this.status == 200) {
-                    // success
-                    comments.update(function (comments) {
-                        delete comments[commentId];
-                        return comments;
-                    });
-                } else {
-                    // error
-                    stores.message.set("An error occured");
-                }
-            }
-        };
-        xhr.open("DELETE", stores.baseURL + "/" + $videoId);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(
-            JSON.stringify({
-                authorId: userId,
-                commentId: commentId,
-            })
-        );
+    async function deleteComment(commentId) {
+        try {
+            let commentRef = db
+                .collection("videos")
+                .doc(myVideoId)
+                .collection("comments")
+                .doc(commentId);
+            await commentRef.delete();
+            comments.update(function (comments) {
+                delete comments[commentId];
+                return comments;
+            });
+            await db
+                .collection("users")
+                .doc(userId)
+                .update({
+                    [`comments.${myVideoId}`]:
+                        firebase.firestore.FieldValue.arrayRemove(commentRef),
+                });
+        } catch (error) {
+            stores.message.set(error.message);
+            console.log(error);
+        }
     }
 </script>
 
@@ -165,7 +211,7 @@
     <hr />
     <div class="container">
         <b>{comment.authorName}</b>
-        <i>{DateDiff.getString(new Date(comment.lastUpdateAt), now)}</i> <br />
+        <i>{DateDiff.getString(comment.lastUpdateAt.toDate(), now)}</i> <br />
         {comment.text} <br />
         <span class="align-middle">{comment.likes}</span>
         {#if comment.liked}

@@ -6,6 +6,11 @@
 	import { uid, videoId, status, username } from "./stores";
 	import ChooseUsername from "./components/choose_username.svelte";
 	import LoginWithGoogle from "./components/login_with_google.svelte";
+	import { firebaseConfig, apiKey } from "./secrets";
+	import firebase from "firebase/app";
+	import "firebase/auth";
+
+	firebase.initializeApp(firebaseConfig);
 
 	chrome.tabs.query(
 		{
@@ -20,7 +25,8 @@
 				"GET",
 				"https://youtube.googleapis.com/youtube/v3/commentThreads?part=id&videoId=" +
 					$videoId +
-					"&key=AIzaSyAzRbVzVFIftvpw5To_YP67scHt2c5ccYQ"
+					"&key=" +
+					apiKey
 			);
 			xhr.onreadystatechange = function () {
 				if (this.readyState == XMLHttpRequest.DONE) {
@@ -28,48 +34,44 @@
 						let res = JSON.parse(this.responseText);
 						if (res.error.errors[0].reason == "commentsDisabled") {
 							//Check user logged in
-							chrome.runtime.sendMessage(
-								{ command: "checkAuth" },
-								(response) => {
-									//console.log(response);
-									if (response.status == "success") {
-										uid.set(response.message.uid);
-										// check username
-										let xhr = new XMLHttpRequest();
-										xhr.open(
-											"GET",
-											stores.baseURL + "/users/" + $uid
-										);
-										xhr.onreadystatechange = function () {
-											if (
-												this.readyState ==
-												XMLHttpRequest.DONE
-											) {
-												if (this.status == 200) {
-													username.set(
-														JSON.parse(
-															xhr.responseText
-														).username
-													);
-													status.set(
-														stores.Status.Success
-													);
-												}
-												if (this.status == 404) {
-													// ask for username
-													status.set(
-														stores.Status
-															.MissingUsername
-													);
-												}
-											}
-										};
-										xhr.send();
-									} else {
-										status.set(stores.Status.NotLoggedIn);
-									}
+							var user = firebase.auth().currentUser;
+							if (user) {
+								stores.setUserData(user);
+								uid.set(user.uid);
+								if (user.displayName == "") {
+									// Missing username
+									status.set(stores.Status.MissingUsername);
+								} else {
+									username.set(user.displayName);
+									status.set(stores.Status.Success);
 								}
-							);
+							} else {
+								chrome.storage.local.get(
+									"user",
+									function (result) {
+										if ("user" in result) {
+											let user = result.user;
+											stores.setUserData(user);
+											uid.set(user.uid);
+											if (user.displayName == "") {
+												status.set(
+													stores.Status
+														.MissingUsername
+												);
+											} else {
+												username.set(user.displayName);
+												status.set(
+													stores.Status.Success
+												);
+											}
+										} else {
+											status.set(
+												stores.Status.NotLoggedIn
+											);
+										}
+									}
+								);
+							}
 						} else {
 							status.set(stores.Status.CommentsEnabled);
 						}
@@ -108,7 +110,12 @@
 {:else if $status == stores.Status.NotLoggedIn}
 	<LoginWithGoogle />
 {:else if $status == stores.Status.Loading}
-	<div class="spinner-border text-primary " role="status">
-		<span class="visually-hidden">Loading...</span>
+	<div
+		class="d-flex justify-content-center align-items-center"
+		style="height: 600px;"
+	>
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
 	</div>
 {/if}
