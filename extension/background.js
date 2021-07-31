@@ -1,8 +1,8 @@
 // EXTENSION ACTIVATION 
 chrome.tabs.onUpdated.addListener(function (tabId, info, tab) {
     if (tab.url.startsWith("https://www.youtube.com/watch?v=")) {
-        chrome.action.enable(tabId);
+        chrome.browserAction.enable(tabId);
     } else {
-        chrome.action.disable(tabId);
+        chrome.browserAction.disable(tabId);
     }
 });
