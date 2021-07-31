@@ -173,7 +173,9 @@
             let snap = await commentRef.get();
             let data = snap.data();
             comments.update(function (comments) {
+                let liked = comments[commentId].liked;
                 comments[commentId] = data;
+                comments[commentId].liked = liked;
                 return comments;
             });
         } catch (error) {
