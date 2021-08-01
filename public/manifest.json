@@ -9,8 +9,6 @@
     "permissions": [
         "tabs",
         "activeTab",
-        "identity",
-        "identity.email",
         "storage"
     ],
     "browser_action": {
