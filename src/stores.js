@@ -34,7 +34,8 @@ export const Status = {
     Failed: 'Failed',
     MissingUsername: 'MissingUsername',
     CommentsEnabled: 'CommentsEnabled',
-    NotLoggedIn: 'NotLoggedIn'
+    NotLoggedIn: 'NotLoggedIn',
+    NotInYoutube: 'NotInYoutube'
 }
 
 export const status = writable(Status.Initial);
