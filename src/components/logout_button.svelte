@@ -12,7 +12,7 @@
                 stores.comments.set({});
                 stores.setLastCommentUpdateTime("");
                 stores.setUserData(null);
-                chrome.storage.local.set({});
+                chrome.storage.local.remove("user");
                 status.set(stores.Status.NotLoggedIn);
             })
             .catch((error) => {
