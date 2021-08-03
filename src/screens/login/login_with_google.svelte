@@ -1,6 +1,6 @@
 <script>
-    import { uid, status, username } from "./../stores";
-    import * as stores from "./../stores";
+    import { uid, status, username } from "./../../stores";
+    import * as stores from "./../../stores";
     import firebase from "firebase/app";
     import "firebase/auth";
 

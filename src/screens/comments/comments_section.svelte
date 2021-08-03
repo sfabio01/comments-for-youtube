@@ -1,12 +1,12 @@
 <script>
-    import LoadMoreButton from "./load_more_button.svelte";
-    import ReplyButton from "./reply_button.svelte";
-    import ViewReplies from "./view_replies.svelte";
-    import * as stores from "./../stores";
-    import { comments, uid, videoId } from "./../stores";
-    import { DateDiff } from "../date_utility";
-    import ReloadButton from "./reload_button.svelte";
-    import LogoutButton from "./logout_button.svelte";
+    import LoadMoreButton from "./components/load_more_button.svelte";
+    import ReplyButton from "./components/reply_button.svelte";
+    import ViewReplies from "./components/view_replies.svelte";
+    import * as stores from "./../../stores";
+    import { comments, uid, videoId } from "./../../stores";
+    import { DateDiff } from "./../../utils/date_utility";
+    import ReloadButton from "./components/reload_button.svelte";
+    import LogoutButton from "./components/logout_button.svelte";
     import firebase from "firebase/app";
     import "firebase/firestore";
 

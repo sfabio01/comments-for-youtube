@@ -1,11 +1,11 @@
 <script>
-	import InputField from "./components/input_field.svelte";
-	import MessageField from "./components/message_field.svelte";
-	import CommentsSection from "./components/comments_section.svelte";
+	import InputField from "./screens/comments/components/input_field.svelte";
+	import MessageField from "./common_components/message_field.svelte";
+	import CommentsSection from "./screens/comments/comments_section.svelte";
 	import * as stores from "./stores";
 	import { uid, videoId, status, username } from "./stores";
-	import ChooseUsername from "./components/choose_username.svelte";
-	import LoginWithGoogle from "./components/login_with_google.svelte";
+	import ChooseUsername from "./screens/username/choose_username.svelte";
+	import LoginWithGoogle from "./screens//login/login_with_google.svelte";
 	import { firebaseConfig, apiKey } from "./secrets";
 	import firebase from "firebase/app";
 	import "firebase/auth";

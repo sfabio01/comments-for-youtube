@@ -1,6 +1,6 @@
 <script>
-    import { status } from "./../stores";
-    import * as stores from "./../stores";
+    import { status } from "./../../../stores";
+    import * as stores from "./../../../stores";
     import firebase from "firebase/app";
     import "firebase/auth";
 

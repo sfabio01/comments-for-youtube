@@ -1,5 +1,11 @@
 <script>
-    import { uid, comments, videoId, username, message } from "./../stores";
+    import {
+        uid,
+        comments,
+        videoId,
+        username,
+        message,
+    } from "./../../../stores";
     import firebase from "firebase/app";
     import "firebase/firestore";
 

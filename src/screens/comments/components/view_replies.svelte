@@ -1,6 +1,6 @@
 <script>
-    import { uid, comments, message, videoId } from "./../stores";
-    import { DateDiff } from "../date_utility";
+    import { uid, comments, message, videoId } from "./../../../stores";
+    import { DateDiff } from "./../../../utils/date_utility";
     import firebase from "firebase/app";
     import "firebase/firestore";
 
