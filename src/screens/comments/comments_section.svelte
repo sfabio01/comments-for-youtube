@@ -123,7 +123,11 @@
                     .limit(4);
             let snap = await query.get();
             let likes_snap = await db.collection("users").doc(uid).get();
-            let liked_list = likes_snap.data()["likes"][videoId];
+            let data = likes_snap.data();
+            let liked_list = [];
+            if ("likes" in data && videoId in data["likes"]) {
+                liked_list = data["likes"][videoId];
+            }
 
             let obj = {};
             snap.forEach((doc) => {
