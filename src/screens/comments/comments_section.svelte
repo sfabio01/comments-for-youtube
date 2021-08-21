@@ -123,7 +123,9 @@
                     .limit(4);
             let snap = await query.get();
             let likes_snap = await db.collection("users").doc(uid).get();
-            let data = likes_snap.data();
+            let data = {};
+            if (likes_snap.exists) data = likes_snap.data();
+            else db.collection("users").doc(uid).set({});
             let liked_list = [];
             if ("likes" in data && videoId in data["likes"]) {
                 liked_list = data["likes"][videoId];

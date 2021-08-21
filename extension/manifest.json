@@ -1,6 +1,6 @@
 {
     "name": "Comments for Youtube",
-    "version": "1.0",
+    "version": "1.2",
     "manifest_version": 2,
     "description": "This Chrome Extension let you comment under Youtube videos with comments disabled",
     "icons": {
